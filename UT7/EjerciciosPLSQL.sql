@@ -314,7 +314,79 @@ SELECT @c;
 -- MODIFICA LA FUNCIÓN PARA QUE SE MUESTREN LOS IMPARES HASTA EL 
 -- NÚMERO QUE TÚ QUIERAS. TAMBIÉN QUIERO OBTENER EL NÚMERO DE
 -- IMPARES QUE SE HAN DETECTADO COMO SALIDA DEL PROCEDIMIENTO.
+CREATE TABLE PRUEBA (CAMPO VARCHAR(30))$$
+DELIMITER $$
+DROP PROCEDURE IF EXISTS pares$$
+CREATE PROCEDURE pares()
+BEGIN
+DECLARE i int;
+SET i=1;
+B3: WHILE i<=10 DO
+    IF MOD(i,2)=0 THEN
+        SELECT CONCAT("El número ",i," es par") as RESULTADO;
+        insert into prueba values (concat("el numero ",i," es par"));
+    END IF;
+    SET i=i+1;
+END WHILE B3;
+END$$
+
+CALL pares$$
+
+DROP FUNCTION sumaEnteros$$
+CREATE FUNCTION sumaEnteros (n INT)
+RETURNS INT
+DETERMINISTIC NO SQL
+BEGIN 
+	DECLARE resultado INT DEFAULT 0;
+    DECLARE i INT DEFAULT 1;
+    IF n < 0 THEN
+		RETURN NULL;
+    END IF;
+    BUCLE: WHILE i<=n DO
+		SET resultado = resultado + i;
+		SET i = i + 1;
+    END WHILE BUCLE;
+    RETURN resultado;
+END$$
+
+SELECT sumaEnteros(3), sumaEnteros(5), sumaEnteros(-3)$$
 
 
+DROP PROCEDURE IF EXISTS sumaFracciones$$
+CREATE PROCEDURE sumaFracciones(IN n INT)
+BEGIN
+	DECLARE resultado DOUBLE DEFAULT 0;
+    DECLARE i INT DEFAULT 1;
+    IF n <= 0 THEN
+		SELECT 'El parámetro no puede ser cero o inferior' AS Advertencia;
+	ELSE
+		BUCLEFRACCIONES: WHILE i<=n DO
+			SET resultado = resultado + 1 / i;
+			SET i = i + 1;
+		END WHILE BUCLEFRACCIONES;
+		
+		SELECT resultado;
+	END IF;
+END$$
+
+CALL sumaFracciones(2)$$
+CALL sumaFracciones(3)$$
+CALL sumaFracciones(5)$$
+CALL sumaFracciones(-5)$$
+CALL sumaFracciones(0)$$
+
+DROP FUNCTION sumarMarcador$$
+CREATE FUNCTION sumarMarcador(marcador VARCHAR(7))
+RETURNS int
+DETERMINISTIC NO SQL
+BEGIN 
+	DECLARE n1 INT;
+    DECLARE n2 INT;
+    DECLARE resultado INT;
+    SET n1 = LEFT(marcador,3);
+    SET n2 = RIGHT(marcador,3);
+    SET resultado = n1 + n2;
+    RETURN resultado;
+END$$
 
 
