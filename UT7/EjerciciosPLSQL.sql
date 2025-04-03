@@ -383,10 +383,16 @@ BEGIN
 	DECLARE n1 INT;
     DECLARE n2 INT;
     DECLARE resultado INT;
+    
     SET n1 = LEFT(marcador,3);
     SET n2 = RIGHT(marcador,3);
     SET resultado = n1 + n2;
+    
     RETURN resultado;
 END$$
+
+SELECT sumarMarcador("011-001"), sumarMarcador("000-999")$$
+
+
 
 
