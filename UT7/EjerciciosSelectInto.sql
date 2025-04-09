@@ -28,28 +28,34 @@ BEGIN
     DECLARE diferenciaDias INT DEFAULT 0;
     DECLARE textoFecha VARCHAR(30);
 
-	SELECT id, titulo, contenido, fecha
-	INTO vId, vTitulo, vContenido, vFecha
-	FROM noticia
-	WHERE id = idNoticia;
-    
-    IF vId IS NULL THEN
-		SELECT CONCAT("La noticia con ID ",idNoticia,
-					  " no existe.") as Aviso;
-    ELSE
-		SET diferenciaDias = DATEDIFF(vHoy, vFecha);
+	IF idNoticia IS NULL THEN
+		SELECT "El id de noticia no puede ser nulo" 
+				as Aviso;
+    ELSE 
 
-		IF diferenciaDias = 0 THEN
-			SET textoFecha = ". Hoy.";
-		ELSEIF diferenciaDias > 0 THEN
-			SET textoFecha = CONCAT(". Hace ",diferenciaDias," dias.");
-		ELSE 
-			SET textoFecha = CONCAT(". Dentro de ",ABS(diferenciaDias)," dias.");
-		END IF;    
+		SELECT id, titulo, contenido, fecha
+		INTO vId, vTitulo, vContenido, vFecha
+		FROM noticia
+		WHERE id = idNoticia;
 		
-		SELECT CONCAT("Titulo: ", vTitulo, 
-		". Contenido: ", vContenido, textoFecha)
-		as NoticiaFormateada;
+		IF vId IS NULL THEN
+			SELECT CONCAT("La noticia con ID ",idNoticia,
+						  " no existe.") as Aviso;
+		ELSE
+			SET diferenciaDias = DATEDIFF(vHoy, vFecha);
+
+			IF diferenciaDias = 0 THEN
+				SET textoFecha = ". Hoy.";
+			ELSEIF diferenciaDias > 0 THEN
+				SET textoFecha = CONCAT(". Hace ",diferenciaDias," dias.");
+			ELSE 
+				SET textoFecha = CONCAT(". Dentro de ",ABS(diferenciaDias)," dias.");
+			END IF;    
+			
+			SELECT CONCAT("Titulo: ", vTitulo, 
+			". Contenido: ", vContenido, textoFecha)
+			as NoticiaFormateada;
+		END IF;
 	END IF;
 END$$
 
@@ -57,3 +63,4 @@ CALL obtenerDatosNoticia(1)$$
 CALL obtenerDatosNoticia(2)$$
 CALL obtenerDatosNoticia(3)$$
 CALL obtenerDatosNoticia(23456)$$
+CALL obtenerDatosNoticia(null)$$
