@@ -3,6 +3,7 @@ DROP DATABASE IF EXISTS noticias;
 CREATE DATABASE noticias;
 USE noticias;
 
+-- Ejemplo 5.19
 CREATE TABLE noticia (
 	id INT PRIMARY KEY auto_increment,
     titulo VARCHAR(200),
@@ -64,3 +65,34 @@ CALL obtenerDatosNoticia(2)$$
 CALL obtenerDatosNoticia(3)$$
 CALL obtenerDatosNoticia(23456)$$
 CALL obtenerDatosNoticia(null)$$
+
+-- Ejercicio 1.
+DROP PROCEDURE IF EXISTS fijandoPoblacionZonaRural$$
+CREATE PROCEDURE fijandoPoblacionZonaRural 
+								(IN codPais VARCHAR(3))
+BEGIN
+	DECLARE mediaPoblacion INT;
+    DECLARE numeroCiudades INT;
+    
+    IF codPais IS NULL THEN
+		SELECT "El código de país debe informarse" AS AVISO;
+    ELSE 
+		
+		SELECT AVG(Population), COUNT(*)
+		INTO mediaPoblacion, numeroCiudades
+		FROM City
+		WHERE CountryCode = codPais;
+		
+        IF numeroCiudades > 0 THEN 
+			UPDATE City
+			SET Population = Population * 1.2
+			WHERE Population < mediaPoblacion 
+			  AND CountryCode = codPais;
+		ELSE 
+			SELECT CONCAT("El país ", codPais, " no tiene ciudades");
+        END IF;
+	END IF;
+END$$
+
+CALL fijandoPoblacionZonaRural("AFG")$$
+CALL fijandoPoblacionZonaRural("COR")$$
