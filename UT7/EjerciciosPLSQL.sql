@@ -384,15 +384,78 @@ BEGIN
     DECLARE n2 INT;
     DECLARE resultado INT;
     
-    SET n1 = LEFT(marcador,3);
-    SET n2 = RIGHT(marcador,3);
-    SET resultado = n1 + n2;
-    
+    IF substr(marcador, 4, 1) != "-" THEN
+		SET resultado = 0;
+    ELSE
+		SET n1 = LEFT(marcador,3);
+		SET n2 = RIGHT(marcador,3);
+		SET resultado = n1 + n2;
+    END IF;
     RETURN resultado;
 END$$
 
-SELECT sumarMarcador("011-001"), sumarMarcador("000-999")$$
+SELECT sumarMarcador("011x001"), sumarMarcador("000-999")$$
+SELECT sumarMarcador("asd-fds")$$
 
+DELIMITER $$
+DROP FUNCTION IF EXISTS mayor$$
+CREATE FUNCTION mayor(n1 INT,n2 INT,n3 INT)
+RETURNS INT
+DETERMINISTIC NO SQL
+BEGIN
+	DECLARE numMayor INT DEFAULT 0;
+	IF n1>=n2 AND n1>=n3 THEN
+		SET numMayor =  n1;
+	ELSEIF n2>=n1 AND n2>=n3 THEN
+		SET numMayor =   n2;
+	ELSEIF n3>=n1 AND n3>=n2 THEN
+		SET numMayor =  n3;
+	END IF;
+    RETURN numMayor;
+END$$
 
+SELECT mayor(123,23,67)$$
+SELECT mayor(12,34,7)$$
+SELECT mayor(43,21,145)$$
+SELECT mayor(31,32,32)$$
 
+DROP PROCEDURE IF EXISTS palindromo$$
+CREATE PROCEDURE palindromo(IN palabra VARCHAR(50))
+BEGIN
+	DECLARE invertido VARCHAR(50);
+    
+    SET palabra = replace(palabra, " ", "");
+    SET palabra = lcase(palabra);
+    SET invertido=REVERSE(palabra);
+    select palabra, invertido;
+    IF palabra=invertido THEN
+		SELECT "Es palíndromo";
+	ELSE
+		SELECT "No es palíndromo";
+    END IF;
+END$$
 
+CALL palindromo("ana")$$
+CALL palindromo("ada")$$
+CALL palindromo(153)$$
+CALL palindromo("La ruta nos aportó otro paso natural")$$
+
+DROP FUNCTION IF EXISTS esPrimo $$
+CREATE FUNCTION esPrimo(num INT)
+RETURNS INT
+DETERMINISTIC NO SQL
+BEGIN
+	DECLARE i INT DEFAULT 2;
+	DECLARE divi INT;
+	
+    bucle: WHILE i <= num/2 DO
+		SET divi = num % i;
+		IF divi = 0 THEN
+			RETURN 0;
+		END IF;
+		SET i = i + 1;
+	END WHILE bucle;
+    
+	RETURN 1;
+END$$
+SELECT esPrimo(23000001address) AS es_primo; $$
