@@ -19,7 +19,8 @@ DELIMITER $$
 DROP PROCEDURE IF EXISTS obtenerDatosNoticia$$
 CREATE PROCEDURE obtenerDatosNoticia(idNoticia INT)
 BEGIN
-	DECLARE vTitulo VARCHAR(200);
+	DECLARE vId INT DEFAULT NULL;
+    DECLARE vTitulo VARCHAR(200);
     DECLARE vContenido TEXT;
     DECLARE vFecha DATE;
     -- Variables para colocar el número de días que hace/dentro de.
@@ -27,28 +28,32 @@ BEGIN
     DECLARE diferenciaDias INT DEFAULT 0;
     DECLARE textoFecha VARCHAR(30);
 
-	SELECT titulo, contenido, fecha
-	INTO vTitulo, vContenido, vFecha
+	SELECT id, titulo, contenido, fecha
+	INTO vId, vTitulo, vContenido, vFecha
 	FROM noticia
 	WHERE id = idNoticia;
     
-    SET diferenciaDias = DATEDIFF(vHoy, vFecha);
-		
-    IF diferenciaDias = 0 THEN
-		SET textoFecha = ". Hoy.";
-    ELSEIF diferenciaDias > 0 THEN
-		SET textoFecha = CONCAT(". Hace ",diferenciaDias," dias.");
-    ELSE 
-		SET textoFecha = CONCAT(". Dentro de ",diferenciaDias," dias.");
-    END IF;    
-    
-    SELECT CONCAT("Titulo: ", vTitulo, 
-    ". Contenido: ", vContenido, textoFecha)
-    as NoticiaFormateada;
+    IF vId IS NULL THEN
+		SELECT CONCAT("La noticia con ID ",idNoticia,
+					  " no existe.") as Aviso;
+    ELSE
+		SET diferenciaDias = DATEDIFF(vHoy, vFecha);
 
+		IF diferenciaDias = 0 THEN
+			SET textoFecha = ". Hoy.";
+		ELSEIF diferenciaDias > 0 THEN
+			SET textoFecha = CONCAT(". Hace ",diferenciaDias," dias.");
+		ELSE 
+			SET textoFecha = CONCAT(". Dentro de ",ABS(diferenciaDias)," dias.");
+		END IF;    
+		
+		SELECT CONCAT("Titulo: ", vTitulo, 
+		". Contenido: ", vContenido, textoFecha)
+		as NoticiaFormateada;
+	END IF;
 END$$
 
 CALL obtenerDatosNoticia(1)$$
 CALL obtenerDatosNoticia(2)$$
 CALL obtenerDatosNoticia(3)$$
-CALL obtenerDatosNoticia(4)$$
+CALL obtenerDatosNoticia(23456)$$
