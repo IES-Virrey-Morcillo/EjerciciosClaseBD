@@ -96,3 +96,17 @@ END$$
 
 CALL fijandoPoblacionZonaRural("AFG")$$
 CALL fijandoPoblacionZonaRural("COR")$$
+
+
+# Desarrolla una función que reciba como parámetro un código de ciudad.
+# La función deberá devolver el resultado de concatenar el distrito de la ciudad, con la región del país y el continente.
+
+
+
+
+
+#Desarrolla una función que recibe un idioma y un código de país como parámetros.
+#La función devolverá un mensaje de texto en función de: si el idioma no se habla en el país,devolverá "El idioma <idioma> no se habla en <nombrePaís>;
+#si el idioma es oficial, "El idioma <idioma> es oficial en <nombrePaís> y lo hablan X personas;
+# si el idioma no es oficial, "El idioma <idioma> no es oficial en <nombrePaís>, aunque lo hablan X personas.
+#Para obtener las personas, se multiplicará el porcentaje de habla por la población del país.
