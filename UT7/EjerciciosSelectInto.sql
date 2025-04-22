@@ -99,8 +99,43 @@ CALL fijandoPoblacionZonaRural("COR")$$
 
 
 # Desarrolla una función que reciba como parámetro un código de ciudad.
-# La función deberá devolver el resultado de concatenar el distrito de la ciudad, con la región del país y el continente.
+# La función deberá devolver el resultado de concatenar el distrito de la ciudad,
+# con la región del país y el continente.
+DELIMITER $$
+DROP FUNCTION IF EXISTS concatenarDatosPais$$
+CREATE FUNCTION concatenarDatosPais (codCiudad INT)
+RETURNS VARCHAR(255)
+NOT DETERMINISTIC READS SQL DATA
+BEGIN
+	DECLARE vDistrito VARCHAR(20);
+    DECLARE vRegion VARCHAR(26);
+    # Podríamos declarar vContinente como VARCHAR(15).
+    DECLARE vContinente enum('Asia','Europe','North_America','Africa','Oceania','Antarctica','South_America');
+	DECLARE vCodPais VARCHAR(3) DEFAULT NULL;
+    
+	IF codCiudad IS NULL THEN
+		RETURN 'Hay que informar el ID de ciudad';
+	ELSE
+		SELECT District, CountryCode
+		INTO vDistrito, vCodPais
+		FROM City
+		WHERE id = codCiudad;
+		
+        IF vCodPais IS NULL THEN
+			RETURN 'La ciudad no existe';
+        ELSE
+			SELECT Region, Continent
+			INTO vRegion, vContinente
+			FROM Country
+			WHERE Code = vCodPais;
+			
+			RETURN CONCAT(vDistrito, " - ", vRegion, " - ", vContinente);
+        END IF;
+	END IF;
+END$$
 
+SELECT concatenarDatosPais(653), concatenarDatosPais(31), 
+       concatenarDatosPais(9999), concatenarDatosPais(null)$$
 
 
 
