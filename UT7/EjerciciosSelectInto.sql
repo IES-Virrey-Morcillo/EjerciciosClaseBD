@@ -162,44 +162,54 @@ BEGIN
 	DECLARE vHablantes INT; -- Calculado
     DECLARE vMensaje VARCHAR(255); -- Calculado
     
-    SELECT IsOfficial, Percentage
-    INTO vEsOficial, vPorcentaje
-    FROM CountryLanguage
-    WHERE CountryCode = codPais
-      AND Language = idioma;
-	
-    SELECT Name, Population
-    INTO vNombrePais, vPoblacion
-    FROM Country
-    WHERE Code = codPais;
+    IF codPais IS NULL OR idioma IS NULL THEN
+		SET vMensaje = "Ni el idioma ni el codigo de pais puede ser nulo";
+    ELSE 
     
-    IF vEsOficial IS NULL THEN
-		-- No se habla el idioma en el país, o el país no existe.
-        IF vNombrePais IS NULL THEN
-			-- El país no existe.
-            SET vMensaje = CONCAT("El pais no existe: ", codPais);
-        ELSE
-			-- El país existe, pero el idioma no se habla.
-            SET vMensaje = CONCAT("El idioma ",idioma," no se habla en ", vNombrePais);
-        END IF;
-    ELSE
-		-- El idioma se habla en el país.
-        SET vHablantes = vPoblacion * (vPorcentaje / 100);
-        IF vEsOficial = 'T' THEN 
-			-- Lenguaje oficial
-            SET vMensaje = CONCAT("El idioma ",idioma," es oficial en ", vNombrePais,
-            " y lo hablan ",vHablantes," personas.");
-        ELSE
-			-- Lenguaje no oficial
-            SET vMensaje = CONCAT("El idioma ",idioma," no es oficial en ", vNombrePais,
-            ", aunque lo hablan ",vHablantes," personas.");
-        END IF;
+		SELECT IsOfficial, Percentage
+		INTO vEsOficial, vPorcentaje
+		FROM CountryLanguage
+		WHERE CountryCode = codPais
+		  AND Language = idioma;
+		
+		SELECT Name, Population
+		INTO vNombrePais, vPoblacion
+		FROM Country
+		WHERE Code = codPais;
+		
+		IF vEsOficial IS NULL THEN
+			-- No se habla el idioma en el país, o el país no existe.
+			IF vNombrePais IS NULL THEN
+				-- El país no existe.
+				SET vMensaje = CONCAT("El pais no existe: ", codPais);
+			ELSE
+				-- El país existe, pero el idioma no se habla.
+				SET vMensaje = CONCAT("El idioma ",idioma," no se habla en ", vNombrePais);
+			END IF;
+		ELSE
+			-- El idioma se habla en el país.
+			SET vHablantes = vPoblacion * (vPorcentaje / 100);
+			IF vEsOficial = 'T' THEN 
+				-- Lenguaje oficial
+				SET vMensaje = CONCAT("El idioma ",idioma," es oficial en ", vNombrePais,
+				" y lo hablan ",vHablantes," personas.");
+			ELSE
+				-- Lenguaje no oficial
+				SET vMensaje = CONCAT("El idioma ",idioma," no es oficial en ", vNombrePais,
+				", aunque lo hablan ",vHablantes," personas.");
+			END IF;
+		END IF;
     END IF;
-    
     RETURN vMensaje;
 END$$
 
 SELECT comprobarIdiomaPais('Castellano','SPA'),
 	   comprobarIdiomaPais('Catalan','SPA'),
        comprobarIdiomaPais('Inglés','SPA'),
-       comprobarIdiomaPais('Castellano','XYZ');
+       comprobarIdiomaPais('Castellano','XYZ'),
+       comprobarIdiomaPais(null,null);
+
+-- Lo bueno de las funciones.
+SELECT comprobarIdiomaPais(Language,CountryCode)
+FROM CountryLanguage;
+
