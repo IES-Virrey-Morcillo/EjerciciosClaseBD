@@ -145,3 +145,61 @@ SELECT concatenarDatosPais(653), concatenarDatosPais(31),
 #si el idioma es oficial, "El idioma <idioma> es oficial en <nombrePaís> y lo hablan X personas;
 # si el idioma no es oficial, "El idioma <idioma> no es oficial en <nombrePaís>, aunque lo hablan X personas.
 #Para obtener las personas, se multiplicará el porcentaje de habla por la población del país.
+
+
+
+DROP FUNCTION comprobarIdiomaPais$$
+CREATE FUNCTION comprobarIdiomaPais (idioma VARCHAR(30), codPais VARCHAR(3))
+RETURNS VARCHAR(255)
+NOT DETERMINISTIC READS SQL DATA
+BEGIN
+	DECLARE vPorcentaje DECIMAL(4,1); -- Tabla CountryLanguage
+    DECLARE vEsOficial ENUM('T','F'); -- Tabla CountryLanguage
+    
+    DECLARE vPoblacion INT; -- Tabla Country
+    DECLARE vNombrePais VARCHAR(52); -- Tabla Country
+    
+	DECLARE vHablantes INT; -- Calculado
+    DECLARE vMensaje VARCHAR(255); -- Calculado
+    
+    SELECT IsOfficial, Percentage
+    INTO vEsOficial, vPorcentaje
+    FROM CountryLanguage
+    WHERE CountryCode = codPais
+      AND Language = idioma;
+	
+    SELECT Name, Population
+    INTO vNombrePais, vPoblacion
+    FROM Country
+    WHERE Code = codPais;
+    
+    IF vEsOficial IS NULL THEN
+		-- No se habla el idioma en el país, o el país no existe.
+        IF vNombrePais IS NULL THEN
+			-- El país no existe.
+            SET vMensaje = CONCAT("El pais no existe: ", codPais);
+        ELSE
+			-- El país existe, pero el idioma no se habla.
+            SET vMensaje = CONCAT("El idioma ",idioma," no se habla en ", vNombrePais);
+        END IF;
+    ELSE
+		-- El idioma se habla en el país.
+        SET vHablantes = vPoblacion * (vPorcentaje / 100);
+        IF vEsOficial = 'T' THEN 
+			-- Lenguaje oficial
+            SET vMensaje = CONCAT("El idioma ",idioma," es oficial en ", vNombrePais,
+            " y lo hablan ",vHablantes," personas.");
+        ELSE
+			-- Lenguaje no oficial
+            SET vMensaje = CONCAT("El idioma ",idioma," no es oficial en ", vNombrePais,
+            ", aunque lo hablan ",vHablantes," personas.");
+        END IF;
+    END IF;
+    
+    RETURN vMensaje;
+END$$
+
+SELECT comprobarIdiomaPais('Castellano','SPA'),
+	   comprobarIdiomaPais('Catalan','SPA'),
+       comprobarIdiomaPais('Inglés','SPA'),
+       comprobarIdiomaPais('Castellano','XYZ');
