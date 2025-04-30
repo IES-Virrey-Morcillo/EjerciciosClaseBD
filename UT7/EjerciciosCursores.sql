@@ -68,10 +68,12 @@ BEGIN
 	DECLARE finDatos BOOLEAN DEFAULT FALSE;
     DECLARE vNombrePais VARCHAR(52);
     DECLARE vCapitalPais INT;
+    DECLARE churro VARCHAR(255);
     
 	DECLARE cursorPaises CURSOR FOR SELECT Name, Capital
 									FROM Country
-									WHERE Continent = continente;
+									WHERE Continent = continente
+                                      AND Capital IS NOT NULL;
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET finDatos = TRUE;
     
     OPEN cursorPaises;
@@ -81,13 +83,62 @@ BEGIN
 		IF finDatos = 1 THEN
 			LEAVE bucleCursor;
 		END IF;
+        -- Lógica del procedimiento
+        SELECT CONCAT("La capital de ",vNombrePais," es ",Name,", y viven ",Population," personas")
+        INTO churro
+        FROM City
+        WHERE ID = vCapitalPais;
         
-        select vNombrePais, vCapitalPais;
+        INSERT INTO auditoria (nombre,fechahora) VALUES (churro,current_timestamp());
     END LOOP bucleCursor;   
-    
-    
     CLOSE cursorPaises;
-	
-
-
+    SELECT * FROM auditoria;
+    DELETE FROM auditoria;
 END$$
+
+CALL poblacionCapitales("North_America")$$
+
+DROP PROCEDURE IF EXISTS exodoInverso $$
+CREATE PROCEDURE exodoInverso (in pRegion varchar(26))
+BEGIN 
+	DECLARE finDatos BOOLEAN DEFAULT FALSE;
+    DECLARE vID INT;
+    DECLARE vNombre VARCHAR(50);
+    DECLARE vPoblacion INT;
+    DECLARE vFactor FLOAT;
+    DECLARE vContador INT DEFAULT 0;
+    
+	DECLARE cursorCiudades CURSOR FOR SELECT ci.ID, ci.Name, ci.Population
+									  FROM City ci
+                                      INNER JOIN Country co ON co.Code = ci.CountryCode
+                                      WHERE co.Region = pRegion;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET finDatos = TRUE;
+    
+    OPEN cursorCiudades;
+    
+    bucleCursor: LOOP
+		FETCH cursorCiudades INTO vID, vNombre, vPoblacion;
+		IF finDatos = 1 THEN
+			LEAVE bucleCursor;
+		END IF;
+        -- Lógica del procedimiento
+        SET vContador = vContador + 1;
+        IF vPoblacion >= 1000000 THEN
+			SET vFactor = 0.9;
+        ELSEIF vPoblacion >= 500000 THEN
+			SET vFactor = 0.95;
+        ELSEIF vPoblacion >= 250000 THEN
+			SET vFactor = 1.1;
+        ELSE
+			SET vFactor = 1.2;
+        END IF;
+		UPDATE city 
+        SET Population = Population * vFactor
+        WHERE ID = vID;
+    END LOOP bucleCursor;   
+    CLOSE cursorCiudades;
+    SELECT CONCAT("Se han actualizado ",vContador," ciudades.");
+END$$
+
+CALL exodoInverso("Caribbean")$$
+CALL exodoInverso("NoExiste")$$
