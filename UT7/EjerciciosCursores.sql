@@ -142,3 +142,37 @@ END$$
 
 CALL exodoInverso("Caribbean")$$
 CALL exodoInverso("NoExiste")$$
+
+
+CREATE TABLE infoCalculada (
+	id INT PRIMARY KEY AUTO_INCREMENT,
+    caracteristica VARCHAR(30) NOT NULL,
+    cualitativo VARCHAR(30),
+    cuantitativo DECIMAL(10,2),
+    observaciones VARCHAR(255),
+    auditoria TIMESTAMP DEFAULT CURRENT_TIMESTAMP()
+)$$
+
+DROP PROCEDURE IF EXISTS registroDensidad $$
+CREATE PROCEDURE registroDensidad (in pibMinimo DECIMAL(10,2), IN pibMaximo DECIMAL(10,2))
+BEGIN 
+	DECLARE finDatos BOOLEAN DEFAULT FALSE;
+    
+	DECLARE cursorPaises CURSOR FOR SELECT -- Poco a poco lo iré completando
+									FROM Country
+									WHERE GNP BETWEEN pibMinimo AND pibMaximo;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET finDatos = TRUE;
+    
+    OPEN cursorPaises;
+    
+    bucleCursor: LOOP
+		FETCH cursorPaises INTO -- 
+		IF finDatos = TRUE THEN
+			LEAVE bucleCursor;
+		END IF;
+        -- Lógica del procedimiento
+        
+        -- insert 
+    END LOOP bucleCursor;   
+    CLOSE cursorPaises;
+END$$
