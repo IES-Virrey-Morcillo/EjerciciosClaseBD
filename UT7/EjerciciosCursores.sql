@@ -157,8 +157,16 @@ DROP PROCEDURE IF EXISTS registroDensidad $$
 CREATE PROCEDURE registroDensidad (in pibMinimo DECIMAL(10,2), IN pibMaximo DECIMAL(10,2))
 BEGIN 
 	DECLARE finDatos BOOLEAN DEFAULT FALSE;
+    DECLARE vPoblacion INT;
+    DECLARE vSuperficie DECIMAL(10,2);
+    DECLARE vNombre VARCHAR(52);
+    DECLARE vPIB DECIMAL(10,2);
     
-	DECLARE cursorPaises CURSOR FOR SELECT -- Poco a poco lo iré completando
+    DECLARE vDensidad DECIMAL(10,2);
+    DECLARE vCualitativo VARCHAR(30);
+    DECLARE vObservaciones VARCHAR(255);
+    
+	DECLARE cursorPaises CURSOR FOR SELECT Population, SurfaceArea, Name, GNP
 									FROM Country
 									WHERE GNP BETWEEN pibMinimo AND pibMaximo;
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET finDatos = TRUE;
@@ -166,13 +174,27 @@ BEGIN
     OPEN cursorPaises;
     
     bucleCursor: LOOP
-		FETCH cursorPaises INTO -- 
+		FETCH cursorPaises INTO vPoblacion, vSuperficie, vNombre, vPIB;
+        -- Cuando no haya datos, entre estas dos instrucciones se ejecutará finDatos=TRUE.
 		IF finDatos = TRUE THEN
 			LEAVE bucleCursor;
 		END IF;
         -- Lógica del procedimiento
+        SET vDensidad = vPoblacion/vSuperficie;
         
-        -- insert 
+        IF vDensidad > 1000 THEN
+			SET vCualitatitivo = "Muy alta";
+        ELSEIF vDensidad > 300 THEN
+			SET vCualitatitivo = "Alta";
+        ELSEIF vDensidad > 50 THEN
+			SET vCualitatitivo = "Media";
+        ELSE
+			SET vCualitatitivo = "Baja";
+        END IF;
+        
+        -- insert
+        INSERT INTO infoCalculada (caracteristica, cualitativo, cuantitativo, observaciones) 
+        VALUES ("DensidadPoblación",vCualitatitivo,vDensidad,vObservaciones);
     END LOOP bucleCursor;   
     CLOSE cursorPaises;
 END$$
