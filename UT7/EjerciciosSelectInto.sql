@@ -36,8 +36,7 @@ BEGIN
 
 		SELECT id, titulo, contenido, fecha
 		INTO vId, vTitulo, vContenido, vFecha
-		FROM noticia
-		WHERE id = idNoticia;
+		FROM noticia;
 		
 		IF vId IS NULL THEN
 			SELECT CONCAT("La noticia con ID ",idNoticia,

@@ -169,6 +169,7 @@ BEGIN
 	DECLARE cursorPaises CURSOR FOR SELECT Population, SurfaceArea, Name, GNP
 									FROM Country
 									WHERE GNP BETWEEN pibMinimo AND pibMaximo;
+    -- EL HANDLER ES EL CATCH DE JAVA.
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET finDatos = TRUE;
     
     OPEN cursorPaises;
@@ -183,18 +184,27 @@ BEGIN
         SET vDensidad = vPoblacion/vSuperficie;
         
         IF vDensidad > 1000 THEN
-			SET vCualitatitivo = "Muy alta";
+			SET vCualitativo = "Muy alta";
+            SET vObservaciones = CONCAT("Alta concentración de población en ",vNombre," (",vPIB,")");
         ELSEIF vDensidad > 300 THEN
-			SET vCualitatitivo = "Alta";
+			SET vCualitativo = "Alta";
+            SET vObservaciones = CONCAT("En ",vNombre," está densamente poblado (",vPIB,")");
         ELSEIF vDensidad > 50 THEN
-			SET vCualitatitivo = "Media";
+			SET vCualitativo = "Media";
+            SET vObservaciones = CONCAT(vNombre," tiene una población moderada (",vPIB,")");
         ELSE
-			SET vCualitatitivo = "Baja";
+			SET vCualitativo = "Baja";
+            SET vObservaciones = CONCAT(vNombre," tiene regiones rurales poco habitadas, desiertos y/o montañas (",vPIB,")");
         END IF;
         
-        -- insert
+        -- INSERT
         INSERT INTO infoCalculada (caracteristica, cualitativo, cuantitativo, observaciones) 
-        VALUES ("DensidadPoblación",vCualitatitivo,vDensidad,vObservaciones);
-    END LOOP bucleCursor;   
+        VALUES ("DensidadPoblación",vCualitativo,vDensidad,vObservaciones);
+        -- FIN LÓGICA PARA CADA REGISTRO DE LA CONSULTA.
+    END LOOP bucleCursor;
     CLOSE cursorPaises;
 END$$
+
+CALL registroDensidad(10,100)$$
+
+
