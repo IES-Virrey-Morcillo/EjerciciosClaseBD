@@ -208,3 +208,74 @@ END$$
 CALL registroDensidad(10,100)$$
 
 
+DROP PROCEDURE IF EXISTS mostrarIdiomasPaises$$
+CREATE PROCEDURE mostrarIdiomasPaises ()
+BEGIN 
+	-- PRIMERO SE DECLARAN VARIABLES
+    DECLARE finDatos BOOLEAN DEFAULT FALSE;
+    -- VARIABLES CURSOR PAÍSES.
+    DECLARE vCodigoPais VARCHAR(3);
+    DECLARE vNombre VARCHAR(52);
+    DECLARE vPoblacion INT;
+    -- VARIABLES CURSOR IDIOMAS.
+    DECLARE vIdioma VARCHAR(30);
+    DECLARE vCodigoPaisIdioma VARCHAR(3);
+    DECLARE vPorcentaje DECIMAL(4,2);
+    
+    -- VARIABLES DE SALIDA
+    DECLARE vChurro VARCHAR(255);
+    DECLARE vCalculoPoblacion INT;
+	DECLARE vContadorIdiomas INT DEFAULT 0;
+ 
+    -- DESPUÉS, CURSORES Y HANDLER.
+	DECLARE cursorPaises CURSOR FOR SELECT Code, Name, Population
+									FROM Country
+                                    -- para pruebas
+                                    WHERE Code IN ("SPA","FRA","DEU","ZON")
+                                    ORDER BY Code ASC;
+    DECLARE cursorIdiomas CURSOR FOR SELECT Language, CountryCode, Percentage
+									 FROM CountryLanguage
+                                     -- para pruebas
+                                     WHERE CountryCode IN ("SPA","FRA","DEU","ZON")
+                                     ORDER BY CountryCode ASC, Percentage DESC;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET finDatos = TRUE;
+    
+    OPEN cursorPaises;
+    OPEN cursorIdiomas;
+    
+    buclePaises: LOOP
+		FETCH cursorPaises INTO vCodigoPais, vNombre, vPoblacion;
+        IF finDatos = TRUE THEN
+			LEAVE buclePaises;
+        END IF;
+        -- Para cada país.
+        SET vChurro = CONCAT("En ", vNombre, " se habla ");
+        SET vContadorIdiomas = 0;
+        
+        bucleIdiomas: LOOP
+			FETCH cursorIdiomas INTO vIdioma, vCodigoPaisIdioma, vPorcentaje;
+			IF finDatos = TRUE THEN
+				SET finDatos = FALSE;
+				LEAVE bucleIdiomas;
+			END IF;
+            
+            IF vCodigoPaisIdioma = vCodigoPais THEN
+				SET vContadorIdiomas = vContadorIdiomas + 1;
+				SET vCalculoPoblacion = vPorcentaje * vPoblacion / 100;
+                SET vChurro = CONCAT(vChurro, vIdioma, "(",vCalculoPoblacion,") ,");
+            ELSE
+				LEAVE bucleIdiomas;
+            END IF;     
+            
+        END LOOP bucleIdiomas;
+		-- vChurro ya tiene todos los idiomas.alter
+        INSERT INTO infoCalculada  (caracteristica, cualitativo, cuantitativo, observaciones) 
+        VALUES ("IdiomasPais",null,vContadorIdiomas,vChurro);
+        
+    END LOOP buclePaises;
+    
+    CLOSE cursorPaises;
+    CLOSE cursorIdiomas;
+END$$
+
+CALL mostrarIdiomasPaises()$$
