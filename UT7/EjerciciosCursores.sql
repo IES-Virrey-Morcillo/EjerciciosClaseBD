@@ -226,6 +226,7 @@ BEGIN
     DECLARE vChurro VARCHAR(255);
     DECLARE vCalculoPoblacion INT;
 	DECLARE vContadorIdiomas INT DEFAULT 0;
+    DECLARE vHayQueHacerFetch BOOLEAN DEFAULT TRUE;
  
     -- DESPUÉS, CURSORES Y HANDLER.
 	DECLARE cursorPaises CURSOR FOR SELECT Code, Name, Population
@@ -253,8 +254,11 @@ BEGIN
         SET vContadorIdiomas = 0;
         
         bucleIdiomas: LOOP
-			FETCH cursorIdiomas INTO vIdioma, vCodigoPaisIdioma, vPorcentaje;
-			IF finDatos = TRUE THEN
+			-- Para tratar 
+			IF vHayQueHacerFetch = TRUE THEN
+				FETCH cursorIdiomas INTO vIdioma, vCodigoPaisIdioma, vPorcentaje;
+			END IF;
+            IF finDatos = TRUE THEN
 				SET finDatos = FALSE;
 				LEAVE bucleIdiomas;
 			END IF;
@@ -263,12 +267,18 @@ BEGIN
 				SET vContadorIdiomas = vContadorIdiomas + 1;
 				SET vCalculoPoblacion = vPorcentaje * vPoblacion / 100;
                 SET vChurro = CONCAT(vChurro, vIdioma, "(",vCalculoPoblacion,") ,");
+                SET vHayQueHacerFetch = TRUE;
             ELSE
+				SET vHayQueHacerFetch = FALSE;
 				LEAVE bucleIdiomas;
             END IF;     
             
         END LOOP bucleIdiomas;
-		-- vChurro ya tiene todos los idiomas.alter
+		-- vChurro ya tiene todos los idiomas.
+        IF vContadorIdiomas = 0 THEN
+			SET vChurro = CONCAT(vNombre, " no tiene idiomas registrados");
+        END IF;
+        
         INSERT INTO infoCalculada  (caracteristica, cualitativo, cuantitativo, observaciones) 
         VALUES ("IdiomasPais",null,vContadorIdiomas,vChurro);
         
@@ -279,3 +289,36 @@ BEGIN
 END$$
 
 CALL mostrarIdiomasPaises()$$
+
+-- ESTRUCTURA "TIPO" DE PROCEDIMIENTO CON CURSOR
+DROP PROCEDURE procedimientoTipoConCursor$$
+-- Incluye entre paréntesis los parámetros si los hubiera.
+CREATE PROCEDURE procedimientoTipoConCursor () 
+BEGIN
+	-- VARIABLE PARA PARAR EL CURSOR.
+	DECLARE finDatos BOOLEAN DEFAULT FALSE;
+    -- DECLARA VARIABLES PARA CURSOR Y RESTO FUNCIONAMIENTO
+	DECLARE vEjemplo VARCHAR(255);
+    
+    -- MODIFICA LA CONSULTA QUE PIDA CADA CASO.
+	DECLARE cursorTipo CURSOR FOR SELECT datoEjemplo FROM X;
+    -- EL HANDLER ES EL CATCH DE JAVA.
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET finDatos = TRUE;
+    
+    OPEN cursorTipo;
+    
+    bucleCursor: LOOP
+		FETCH cursorTipo INTO vEjemplo;
+        -- Cuando no haya datos, entre estas dos instrucciones se ejecutará finDatos=TRUE.
+		IF finDatos = TRUE THEN
+			LEAVE bucleCursor;
+		END IF;
+        -- Introduce aquí la lógica del procedimiento
+        
+    END LOOP bucleCursor;
+    CLOSE cursorPaises;
+    
+    -- Introduce aquí la lógica resumen, o que se ejecuta tras tratar 
+    -- todos los registros del cursor.
+    
+END$$
