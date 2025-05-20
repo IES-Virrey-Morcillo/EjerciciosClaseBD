@@ -370,7 +370,7 @@ BEGIN
 		UPDATE Country
         SET GNPOld = GNP,
 			GNP = GNP * vFactor
-		WHERE Code = vCodigo;
+		WHERE Code = vCode;
         
     END LOOP bucleCursor;
     CLOSE cursorPaises;
@@ -382,4 +382,49 @@ BEGIN
     
 END$$
 
+CALL subidaImpuestos("Europe")$$
 
+DROP PROCEDURE recuentoIdiomasOficiales$$
+CREATE PROCEDURE recuentoIdiomasOficiales(IN pRegion VARCHAR(26))
+BEGIN
+	DECLARE finDatos BOOLEAN DEFAULT FALSE;
+    DECLARE vCodigo VARCHAR(3);
+    DECLARE vNombre VARCHAR(52);
+    DECLARE vContadorIdiomas INT;
+    DECLARE vObservaciones VARCHAR(255);
+    
+    DECLARE cursorIdiomas CURSOR FOR SELECT Code, Name
+									 FROM Country
+                                     WHERE Region = pRegion;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET finDatos = TRUE;
+    
+    OPEN cursorIdiomas;
+    
+    bucleCursor: LOOP
+		FETCH cursorIdiomas INTO vCodigo, vNombre;
+		IF finDatos = TRUE THEN
+			LEAVE bucleCursor;
+        END IF;
+        
+        SELECT Count(*)
+        INTO vContadorIdiomas
+        FROM CountryLanguage
+        WHERE CountryCode = vCodigo
+          AND IsOfficial = 'T';
+        
+        IF vContadorIdiomas = 3 THEN
+			SET vObservaciones = CONCAT(vNombre, " es un país multicultural.");
+        ELSEIF vContadorIdiomas < 3 THEN
+			SET vObservaciones = CONCAT(vNombre, " tiene pocos idiomas oficiales.");
+        ELSE 
+			SET vObservaciones = CONCAT(vNombre, " tiene demasiados idiomas.");
+        END IF;
+        
+        INSERT INTO infoCalculada (caracteristica, cualitativo, cuantitativo, observaciones)
+        VALUES ("IdiomasOficiales",vCodigo,vContadorIdiomas,vObservaciones);
+    END LOOP bucleCursor;
+    
+    CLOSE cursorIdiomas;
+
+
+END$$
