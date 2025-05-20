@@ -308,6 +308,7 @@ BEGIN
     OPEN cursorTipo;
     
     bucleCursor: LOOP
+		-- Cambia vEjemplo por las variables que necesites.
 		FETCH cursorTipo INTO vEjemplo;
         -- Cuando no haya datos, entre estas dos instrucciones se ejecutará finDatos=TRUE.
 		IF finDatos = TRUE THEN
@@ -316,9 +317,69 @@ BEGIN
         -- Introduce aquí la lógica del procedimiento
         
     END LOOP bucleCursor;
-    CLOSE cursorPaises;
+    CLOSE cursorTipo;
     
     -- Introduce aquí la lógica resumen, o que se ejecuta tras tratar 
     -- todos los registros del cursor.
     
 END$$
+
+
+-- EJERCICIO 6
+DROP PROCEDURE subidaImpuestos$$
+-- Incluye entre paréntesis los parámetros si los hubiera.
+CREATE PROCEDURE subidaImpuestos (IN continente enum('Asia','Europe','North_America','Africa','Oceania','Antarctica','South_America')) 
+BEGIN
+	-- VARIABLE PARA PARAR EL CURSOR.
+	DECLARE finDatos BOOLEAN DEFAULT FALSE;
+    -- DECLARA VARIABLES PARA CURSOR Y RESTO FUNCIONAMIENTO
+	DECLARE vCode VARCHAR(3);
+    DECLARE vGNP DECIMAL(10,2);
+    DECLARE vFactor FLOAT;
+    DECLARE vNumAumentados INT DEFAULT 0;
+    DECLARE vNumReducidos INT DEFAULT 0;
+    
+    -- MODIFICA LA CONSULTA QUE PIDA CADA CASO.
+	DECLARE cursorPaises CURSOR FOR SELECT GNP, Code
+									FROM Country
+                                    WHERE Continent = continente;
+    -- EL HANDLER ES EL CATCH DE JAVA.
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET finDatos = TRUE;
+    
+    OPEN cursorPaises;
+    
+    bucleCursor: LOOP
+		-- Cambia vEjemplo por las variables que necesites.
+		FETCH cursorPaises INTO vGNP, vCode;
+        -- Cuando no haya datos, entre estas dos instrucciones se ejecutará finDatos=TRUE.
+		IF finDatos = TRUE THEN
+			LEAVE bucleCursor;
+		END IF;
+        -- Introduce aquí la lógica del procedimiento
+        IF vGNP > 500000 THEN
+			SET vFactor = 0.95;
+            SET vNumReducidos = vNumReducidos + 1;
+        ELSEIF vGNP > 100000 THEN 
+			SET vFactor = 0.98;
+            SET vNumReducidos = vNumReducidos + 1;
+        ELSE 
+			SET vFactor = 1.03;
+            SET vNumAumentados = vNumAumentados + 1;
+        END IF;
+        
+		UPDATE Country
+        SET GNPOld = GNP,
+			GNP = GNP * vFactor
+		WHERE Code = vCodigo;
+        
+    END LOOP bucleCursor;
+    CLOSE cursorPaises;
+    
+    -- Introduce aquí la lógica resumen, o que se ejecuta tras tratar 
+    -- todos los registros del cursor.
+    INSERT INTO infoCalculada (caracteristica, cuantitativo, observaciones)
+    VALUES ("SubidaImpuestos",vNumAumentados,vNumReducidos);
+    
+END$$
+
+
