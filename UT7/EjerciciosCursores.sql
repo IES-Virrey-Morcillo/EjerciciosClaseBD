@@ -425,6 +425,6 @@ BEGIN
     END LOOP bucleCursor;
     
     CLOSE cursorIdiomas;
-
-
 END$$
+
+CALL recuentoIdiomasOficiales("Southern Europe")$$
