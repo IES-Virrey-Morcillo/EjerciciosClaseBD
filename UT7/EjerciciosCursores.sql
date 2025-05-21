@@ -428,3 +428,57 @@ BEGIN
 END$$
 
 CALL recuentoIdiomasOficiales("Southern Europe")$$
+
+
+
+DROP PROCEDURE IF EXISTS ajusteEsperanzaVida$$
+CREATE PROCEDURE ajusteEsperanzaVida (IN pSuperficieMin DECIMAL(10,2),
+									  IN pSuperficieMax DECIMAL(10,2))
+BEGIN
+	DECLARE finDatos BOOLEAN DEFAULT FALSE;
+    DECLARE vEsperanza DECIMAL(3,1);
+    DECLARE vPoblacion INT;
+    DECLARE vSuperficie DECIMAL(10,2);
+    DECLARE vCodigo VARCHAR(3);
+    DECLARE vAnosAumentados INT DEFAULT 0;
+    DECLARE vAnosDisminuidos INT DEFAULT 0;
+    
+    DECLARE cursorPaises CURSOR FOR SELECT LifeExpectancy, Population, SurfaceArea, Code
+									FROM Country
+                                    WHERE SurfaceArea BETWEEN pSuperficieMin AND pSuperficieMax
+                                      AND LifeExpectancy IS NOT NULL;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET finDatos = TRUE;
+    
+    OPEN cursorPaises;
+    
+    bucle: LOOP
+		FETCH cursorPaises INTO vEsperanza, vPoblacion, vSuperficie, vCodigo;
+        IF finDatos = TRUE THEN
+			LEAVE bucle;
+        END IF;
+		
+        IF vPoblacion > 100000000 THEN
+			SET vEsperanza = vEsperanza - 3;
+            SET vAnosDisminuidos = vAnosDisminuidos - 3;
+        ELSEIF vPoblacion > 50000000 THEN
+			SET vEsperanza = vEsperanza - 1;
+            SET vAnosDisminuidos = vAnosDisminuidos - 1;
+        ELSEIF vPoblacion < 10000000 THEN
+			SET vEsperanza = vEsperanza + 2;
+			SET vAnosDisminuidos = vAnosDisminuidos + 2;
+        END IF;        
+        
+        UPDATE Country
+        SET LifeExpectancy = vEsperanza
+        WHERE Code = vCodigo;
+        
+    END LOOP bucle;
+
+	CLOSE cursorPaises;
+    
+    INSERT INTO infoCalculada (caracteristica, cuantitativa, observaciones)
+    VALUES ("esperanzaModificada",vAnosAumentados,vAnosDisminuidos);
+END$$
+
+CALL ajusteEsperanzaVida(10000,12000)$$
+

@@ -463,9 +463,28 @@ SELECT esPrimo(23000001address) AS es_primo; $$
 
 
 -- Hacer una función que retorne la suma de los términos 1/n  con “n” entre 1 y “m”,
---  es decir ½+1/3+….1/m, siendo  “m” el parámetro de entrada. Tener  en cuenta que  “m”  
+-- es decir 1+½+1/3+….1/m, siendo  “m” el parámetro de entrada. Tener  en cuenta que  “m”  
 -- no puede ser cero.
 
-
-
+DROP FUNCTION IF EXISTS sumaTerminos$$
+CREATE FUNCTION sumaTerminos(m INT)
+RETURNS DOUBLE
+DETERMINISTIC NO SQL
+BEGIN 
+	DECLARE n INT DEFAULT 1;
+    DECLARE solucion DOUBLE DEFAULT 0;
+    
+    
+    bucle: LOOP
+		SET solucion = solucion + 1/n; 
+        
+        SET n = n + 1;
+        IF n > m THEN
+			LEAVE bucle;
+        END IF;
+    END LOOP bucle;
+    
+    RETURN solucion;
+    
+END$$
 
