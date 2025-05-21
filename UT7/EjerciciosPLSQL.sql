@@ -459,3 +459,13 @@ BEGIN
 	RETURN 1;
 END$$
 SELECT esPrimo(23000001address) AS es_primo; $$
+
+
+
+-- Hacer una función que retorne la suma de los términos 1/n  con “n” entre 1 y “m”,
+--  es decir ½+1/3+….1/m, siendo  “m” el parámetro de entrada. Tener  en cuenta que  “m”  
+-- no puede ser cero.
+
+
+
+
