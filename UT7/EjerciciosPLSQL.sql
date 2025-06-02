@@ -474,17 +474,25 @@ BEGIN
 	DECLARE n INT DEFAULT 1;
     DECLARE solucion DOUBLE DEFAULT 0;
     
+    IF m <= 0 OR m IS NULL THEN
+		SET solucion = NULL;
+    ELSE
     
-    bucle: LOOP
-		SET solucion = solucion + 1/n; 
-        
-        SET n = n + 1;
-        IF n > m THEN
-			LEAVE bucle;
-        END IF;
-    END LOOP bucle;
+		bucle: LOOP
+			SET solucion = solucion + 1/n; 
+			
+			SET n = n + 1;
+			IF n > m THEN
+				LEAVE bucle;
+			END IF;
+		END LOOP bucle;
+    
+    END IF;
     
     RETURN solucion;
     
 END$$
+
+SELECT sumaTerminos(2), sumaTerminos(3), sumaTerminos(0), sumaTerminos(-6)$$
+
 
